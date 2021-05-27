@@ -6,10 +6,10 @@ from decimal import Decimal
 import scipy
 from scipy.optimize import minimize
 
-def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
+def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
     #print("Energy Called")
     gradzQ1,gradzQ2,gradzQ3,gradzQ4,gradzQ5=np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz))
-    ws = 1
+    ws = 10
     dz = 1
     dt = 1
     Q3 = np.zeros([Lz,Lt])
@@ -17,7 +17,7 @@ def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
     Q1 = np.zeros([Lz,Lt])
     Q2 = np.zeros([Lz,Lt])
     Q4 = np.zeros([Lz,Lt])
-    original = guess
+    # original = guess
     for t in range(0,Lt):
         for z in range(0,Lz):
             Q1[z,t] = guess[5*t*Lz + 5*z]
@@ -26,10 +26,12 @@ def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
             Q4[z,t] = guess[5*t*Lz + 5*z + 3]
             Q5[z,t] = guess[5*t*Lz + 5*z + 4]
 
+    splay,twist,bend,surface,bulk = 0.0,0.0,0.0,0.0,0.0
+    time = 0.0
+
     for t in range(0,Lt):
 
         gradxQ1,gradxQ2,gradxQ3,gradxQ4,gradxQ5=np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz))
-        splay,twist,bend,surface,bulk = 0.0,0.0,0.0,0.0,0.0
         Qt1,Qt2,Qt3,Qt4,Qt5= (2.0*s/3.0),0.0,0.0,-s/3.0,0.0
         gradxQ1 = np.zeros((Lz))
         gradxQ2 = np.zeros((Lz))
@@ -64,9 +66,8 @@ def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
                 Q4[z,t] = original[5*t*Lz + 5*z + 3]
                 Q5[z,t] = original[5*t*Lz + 5*z + 4]
 
-            time = 0.0
             if t != 0 and t!= Lt-1:
-                time = (sig/2.0)*((-Q3[z,t-1] + Q3[z,t+1])**2/(2.*dt**2) + (-Q5[z,t-1] + Q5[z,t+1])**2/(2.*dt**2)\
+                time += (sig/2.0)*((-Q3[z,t-1] + Q3[z,t+1])**2/(2.*dt**2) + (-Q5[z,t-1] + Q5[z,t+1])**2/(2.*dt**2)\
                  + (-alpha[z,t-1] + alpha[z,t+1])**2/dt**2 +\
                  ((-alpha[z,t-1] + alpha[z,t+1])/(2.*dt) - (-beta[z,t-1] + beta[z,t+1])/(2.*dt))**2\
                  + ((-alpha[z,t-1] + alpha[z,t+1])/(2.*dt) + (-beta[z,t-1] + beta[z,t+1])/(2.*dt))**2 +\
@@ -79,7 +80,7 @@ def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
                 gradzQ4[z] =  (ws) * (3*Q4[z,t]-4*Q4[z-1,t]+Q4[z-2,t]) / (2.0*dz)
                 gradzQ5[z] =  (ws) * (3*Q5[z,t]-4*Q5[z-1,t]+Q5[z-2,t]) / (2.0*dz)
 
-                surface = 0.5*ws*( (Q1[z,t]-Qt1)**2 + 2*(Q2[z,t]-Qt2)**2 \
+                surface += 0.5*ws*( (Q1[z,t]-Qt1)**2 + 2*(Q2[z,t]-Qt2)**2 \
                 + 2*(Q3[z,t]-Qt3)**2+(Qt1 + Qt4 - Q1[z,t] - Q4[z,t])**2 \
                 + (Q4[z,t] - Qt4)**2 +2*(Q5[z,t] - Qt5)**2 )
 
@@ -90,7 +91,7 @@ def calcenergy(guess,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
                 gradzQ4[z] =  (ws) * -(3*Q4[z,t]-4*Q4[z-1,t]+Q4[z-2,t]) / (2.0*dz)
                 gradzQ5[z] =  (ws) * -(3*Q5[z,t]-4*Q5[z-1,t]+Q5[z-2,t]) / (2.0*dz)
 
-                surface = 0.5*ws*( (Q1[z,t]-Qt1)**2 + 2*(Q2[z,t]-Qt2)**2 \
+                surface += 0.5*ws*( (Q1[z,t]-Qt1)**2 + 2*(Q2[z,t]-Qt2)**2 \
                 + 2*(Q3[z,t]-Qt3)**2+(Qt1 + Qt4 - Q1[z,t] - Q4[z,t])**2 \
                 + (Q4[z,t] - Qt4)**2 +2*(Q5[z,t] - Qt5)**2 )
             else:

@@ -11,10 +11,10 @@ import initialise
 import update
 import energy as en
 
-Lz=30
-Lt=30
-conv = 1e-6
-iters = 1e7
+Lz=8
+Lt=8
+conv = 1e-1
+iters = 2e4 
 splitt = 4.0
 splitz = 5.0
 timesplit = int(Lt / splitt)
@@ -24,18 +24,18 @@ highz = int((splitz-1))*int(Lz/splitz)
 dz = 1.0
 coza,cozb = 0,0
 #time energy
-sig = 4.0
+sig = 2.0
 
 #Bulk constants
-a=300.0
-b=200.0
-c=100.0
+a=3.0
+b=2.0
+c=1.0
 s = (b + math.sqrt(b**2 + 24*a*c))/(4.0*c)
 print(s)
 #Elastic constants
 
-ks = 1e-12
-kt = 1e-12
+ks = 1e-6
+kt = 1e-6
 #initial and final windings for initial conditions
 
 w0 = 1.0
@@ -87,13 +87,14 @@ for t in range(0,Lt):
 file.close()
 
 guess = np.loadtxt("initialguess.dat")
+original = guess
 print(np.shape(guess), type(guess))
 z = 0
 t = 0
-minen = scipy.optimize.minimize(en.calcenergy,guess,args=((sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c)),options={ 'ftol': conv, 'maxiter': iters,'disp': True}, method='nelder-mead')
+minen = scipy.optimize.minimize(en.calcenergy,guess,args=((original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c)),options={ 'ftol': conv, 'maxiter': iters,'disp': True}, method='nelder-mead')
 #minen = scipy.optimize.minimize(en.calcenergy,guess,args=((sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c)),options={ 'ftol': conv, 'maxiter': iters,'disp': True}, method='L-BFGS-B')
-print(minen)
-print(np.shape(minen.x))
+#print(minen)
+#print(np.shape(minen.x))
 np.savetxt("energyarray.dat", minen.x)
 #minimize(fun(emptyarray, tuple), guess, method)
 
