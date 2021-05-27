@@ -10,7 +10,7 @@ import math as m
 from mpl_toolkits.mplot3d import Axes3D
 
 
-lz,lt = 20,20
+lz,lt = 10,10
 frames = 1
 data = np.loadtxt("energyarray.dat")
 #data = np.loadtxt("initialguess.dat")
