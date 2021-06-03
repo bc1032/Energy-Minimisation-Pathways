@@ -4,13 +4,11 @@ import pylab as pl
 import sys
 import os
 import matplotlib.pyplot as plt
-from matplotlib import ticker, cm
-from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import math as m
 from mpl_toolkits.mplot3d import Axes3D
 
 
-lz,lt = 10,10
+lz,lt = 101,400
 frames = 1
 data = np.loadtxt("energyarray.dat")
 #data = np.loadtxt("initialguess.dat")

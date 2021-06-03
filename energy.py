@@ -5,19 +5,15 @@ import matplotlib.pyplot as plt
 from decimal import Decimal
 import scipy
 from scipy.optimize import minimize
+import calculategrad
 
-def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
+def calcenergy(guess,original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5):
     #print("Energy Called")
     gradzQ1,gradzQ2,gradzQ3,gradzQ4,gradzQ5=np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz))
-    ws = 10
+    ws = 1e4
     dz = 1
     dt = 1
-    Q3 = np.zeros([Lz,Lt])
-    Q5 = np.zeros([Lz,Lt])
-    Q1 = np.zeros([Lz,Lt])
-    Q2 = np.zeros([Lz,Lt])
-    Q4 = np.zeros([Lz,Lt])
-    # original = guess
+
     for t in range(0,Lt):
         for z in range(0,Lz):
             Q1[z,t] = guess[5*t*Lz + 5*z]
@@ -29,7 +25,7 @@ def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
     splay,twist,bend,surface,bulk = 0.0,0.0,0.0,0.0,0.0
     time = 0.0
 
-    for t in range(0,Lt):
+    for t in range(1,Lt-1):
 
         gradxQ1,gradxQ2,gradxQ3,gradxQ4,gradxQ5=np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz)),np.zeros((Lz))
         Qt1,Qt2,Qt3,Qt4,Qt5= (2.0*s/3.0),0.0,0.0,-s/3.0,0.0
@@ -38,7 +34,7 @@ def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
         gradxQ3 = np.zeros((Lz))
         gradxQ4 = np.zeros((Lz))
         gradxQ5 = np.zeros((Lz))
-        for z in range(0,Lz):
+        for z in range(1,Lz-1):
             if t == 0:
                 Q1[z,t] = original[5*z]
                 Q2[z,t] = original[5*z + 1]
@@ -84,6 +80,7 @@ def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
                 + 2*(Q3[z,t]-Qt3)**2+(Qt1 + Qt4 - Q1[z,t] - Q4[z,t])**2 \
                 + (Q4[z,t] - Qt4)**2 +2*(Q5[z,t] - Qt5)**2 )
 
+
             elif z == 0:
                 gradzQ1[z] =  (ws) * -(3*Q1[z,t]-4*Q1[z-1,t]+Q1[z-2,t]) / (2.0*dz)
                 gradzQ2[z] =  (ws) * -(3*Q2[z,t]-4*Q2[z-1,t]+Q2[z-2,t]) / (2.0*dz)
@@ -117,7 +114,8 @@ def calcenergy(guess,original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c):
                     + ( gradzQ5[z] + gradxQ2[z])**2 + (gradzQ1[z] + gradzQ4[z] - gradxQ3[z])**2 )
 
     energy = bulk + splay + twist + surface + time
+    calculategrad.calcgrad(guess,original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5)
             #print(bulk,splay,twist,surface)
 
         #print(energy)
-    return(energy)
+    return(energy,GradE)
