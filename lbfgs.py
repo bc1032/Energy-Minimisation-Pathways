@@ -11,33 +11,38 @@ import calculategrad
 import initialise
 import update
 import energy as en
+import analyse
 
-zcomp = 1
-Lz=101
+zcomp = 0
+Lz=50
 Lt=400
-gconv = 1e-6
-fconv = 1e-9
+ws = 1e5
+gconv = 2.2e-4
+fconv = 2.220446049250313e-15
 iters = 5e6
-funciters = 1000
-lsiters = 1000
-splitt = 4.0
-splitz = 6.0
+funciters = 1e8
+lsiters = 1e9
+splitt = 50.0
+splitz = 10.0
 timesplit = int(Lt / splitt)
 timesplitf = int((splitt-1)*(Lt / splitt))
 lowz = int(Lz/splitz)
 highz = int((splitz-1))*int(Lz/splitz)
 dz = 1.0
 coza,cozb = 0,0
-#time energy
-sig = 10.0
+#time energy-
+sig = 1e2
 #Elastic constants
-ks = 1e-12
-kt = 1e-12
-
+ks = 1e-6
+kt = 1e-6
 #Bulk constants
-a=3.0
-b=2.0
-c=1.0
+a=3
+b=2
+c=1
+
+splay,twist,bend,surface,bulk = 0.0,0.0,0.0,0.0,0.0
+timeen = 0.0
+
 s = (b + math.sqrt(b**2 + 24*a*c))/(4.0*c)
 print(s)
 
@@ -102,7 +107,7 @@ original = guess
 print(np.shape(guess), type(guess))
 z = 0
 t = 0
-GradE = calculategrad.calcgrad(guess,original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5)
+GradE = calculategrad.calcgrad(guess,original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5,ws)
 
 Q3 = np.zeros([Lz,Lt])
 Q5 = np.zeros([Lz,Lt])
@@ -110,13 +115,25 @@ Q1 = np.zeros([Lz,Lt])
 Q2 = np.zeros([Lz,Lt])
 Q4 = np.zeros([Lz,Lt])
 #minen = scipy.optimize.minimize(en.calcenergy,guess,args=((original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c)),options={ 'ftol': conv, 'maxiter': iters,'disp': True}, method='nelder-mead')
+
+# minen = scipy.optimize.minimize(en.calcenergy,guess,\
+# args=((original,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5)),\
+# options={'disp': True},\
+# method='nelder-mead')
+
 minen = scipy.optimize.minimize(en.calcenergy,guess,\
-args=((original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5)),\
-#options={ 'ftol': fconv, 'gtol': gconv, 'maxls': lsiters, 'maxfun': funciters 'maxiter': iters,'disp': True},\
-options={'disp': True, 'maxls': 1e7, 'gtol': 1e-05, 'maxiter': 35000, 'ftol': 2.220446049250313e-09, 'maxcor': 10, 'maxfun': 1e6},\
-method='L-BFGS-B',jac=True)
+args=(original,GradE,sig,Lz,Lt,ks,kt,q0,z,t,s,alpha,beta,gamma,a,b,c,Q1,Q2,Q3,Q4,Q5,ws,timeen,splay,twist,bend,surface,bulk),\
+options={'disp': True,'ftol':fconv, 'eps' : 1e-4},method='L-BFGS-B',jac=True)
+#, 'ftol': fconv,'gtol': gconv},\
+# 'maxls': lsiters, 'gtol': gconv, 'maxiter': 35000, 'ftol': fconv, 'maxcor': 10, 'maxfun': 1e9},\
+#options={'disp': True,'gtol': gconv},method='cg',jac=True)
 
 np.savetxt("energyarray.dat", minen.x)
+
+analyse.analysis(Lz,Lt)
+print(Lz,Lt)
+
+
 Energy = np.zeros((Lt))
 s = (b + math.sqrt(b**2 + 24*a*c))/(4.0*c)
 qt = np.array([[2.0*s/3.0,0,0],[0,-s/3.0,0],[0,0,-s/3.0]])
